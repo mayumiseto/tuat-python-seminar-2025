@@ -12,6 +12,6 @@ https://colab.research.google.com/github/mayumiseto/tuat-python-seminar-2025/blo
 
 Items
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](
-https://colab.research.google.com/github/mayumiseto/tuat-python-seminar-2025/blob/main/notebooks/2_0_Average_Temperature.ipynb)
+https://colab.research.google.com/github/mayumiseto/tuat-python-seminar-2025/blob/main/notebooks/2-0_Average_Temperature.ipynb)
 
 これらのノートブックは Google Colab 上で実行できます。
