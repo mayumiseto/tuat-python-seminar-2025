@@ -6,6 +6,6 @@ Python seminar materials for setolab member.
 ## Lecture 1 Notebook
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](
-https://colab.research.google.com/github/mayumiseto/tuat-python-seminar-2025/notebooks/1_Hello_World.ipynb)
+https://colab.research.google.com/github/mayumiseto/tuat-python-seminar-2025/notebooks/blob/main/1_Hello_World.ipynb)
 
 このノートブックは Google Colab 上で実行できます。
