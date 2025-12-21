@@ -1,0 +1,20 @@
+[project]
+name = "myutils"
+version = "0.1.0"
+description = "Common IO, viz, and stats utilities for your notebooks"
+authors = [{ name = "Mayumi Seto", email = "seto@ics.nara-wu.ac.jp" }]
+requires-python = ">=3.10"
+dependencies = ["pandas", "numpy"]
+
+# “おまけ依存関係”として機能別に分離（必要なときだけ入れる）
+[project.optional-dependencies]
+viz = ["matplotlib"]
+stats = ["scipy", "statsmodels"]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["myutils*"]
+exclude = ["Multivariate_Analysis*", "Python_Programming_Basics*"]
