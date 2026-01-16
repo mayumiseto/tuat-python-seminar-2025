@@ -84,34 +84,41 @@ def plot_timeseries_with_right_hist(
     return fig, (ax_ts, ax_hist)
     
     
-    def plot_scatter(
+def plot_scatter(
     df: pd.DataFrame,
     x_name: str,
     y_name: str,
     figsize=(5, 5),
     title: str | None = None,
     auto_log_if_wide: bool = True,
-    log_threshold_ratio: float = 1e3,  # 3桁以上広がっていたら log に
+    log_threshold_ratio: float = 1e3,
     equal_aspect_if_similar_scale: bool = True,
-    save_path: str | None = None,     # 例: "figure.eps" や "figure.png"
+    save_path: str | None = None,
 ):
     """
-    df の列 x_name, y_name から散布図を作成。
-    - 文字列でも to_numeric で自動数値化（失敗は NaN→drop）
-    - 値のダイナミックレンジが広い場合は自動で対数軸（正の値のみ）に切替
-    - 軸スケールが近いときは等軸比 option
-    - 研究用の標準スタイルを rcParams で適用済み
+    df の列 x_name, y_name から散布図を作成する。
+
+    特徴
+    ----
+    - 数値化失敗は NaN → 自動除去
+    - ダイナミックレンジが広い場合のみ log 軸に自動切替
+    - log 軸使用時は「正の値のみ」を明示的に使用
+    - 軸スケールが近い場合のみ equal aspect
+    - fig, ax を返す（後処理しやすい）
     """
-    # 数値化して欠損除去
+
+    # --- 数値化 & 欠損除去 ---
     x = pd.to_numeric(df[x_name], errors="coerce")
     y = pd.to_numeric(df[y_name], errors="coerce")
     data = pd.DataFrame({x_name: x, y_name: y}).dropna()
 
     if data.empty:
-        raise ValueError("有効な数値データがありません（全て NaN になっています）。")
+        raise ValueError("有効な数値データがありません（全て NaN です）。")
 
-    # ログ軸の自動判定（正の値だけで評価）
+    # --- log 軸を使うか判定（正の値のみで評価） ---
     use_log = False
+    log_data = data
+
     if auto_log_if_wide:
         pos = data[(data[x_name] > 0) & (data[y_name] > 0)]
         if not pos.empty:
@@ -119,45 +126,49 @@ def plot_timeseries_with_right_hist(
             yr = pos[y_name].max() / pos[y_name].min()
             if (xr >= log_threshold_ratio) or (yr >= log_threshold_ratio):
                 use_log = True
-                data = pos  # 対数は正の値のみ
+                log_data = pos  # log 軸用データを明示
 
-    fig = plt.figure(figsize=figsize)
-    ax = fig.add_subplot(111)
+    # --- Figure ---
+    fig, ax = plt.subplots(figsize=figsize)
 
-    # 散布図（色は指定しない＝デフォルトに従う）
-    ax.scatter(data[x_name].values, data[y_name].values)
+    ax.scatter(
+        log_data[x_name].values,
+        log_data[y_name].values,
+        s=20,
+        edgecolor="black",
+        linewidth=0.5,
+    )
 
-    # 軸ラベルとタイトル
+    # --- ラベル・タイトル ---
     ax.set_xlabel(x_name)
     ax.set_ylabel(y_name)
-    if title is None:
-        ax.set_title(f"Scatter: {y_name} vs {x_name}")
-    else:
-        ax.set_title(title)
+    ax.set_title(title if title else f"{y_name} vs {x_name}")
 
-    # 軸スケール
+    # --- 軸スケール ---
     if use_log:
         ax.set_xscale("log")
         ax.set_yscale("log")
     else:
-        # 10^k 表記が鬱陶しいときは普通のスカラー表記に
-        ax.xaxis.set_major_formatter(ScalarFormatter(useMathText=True))
-        ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+        # log でない場合のみ通常表記（←競合回避）
+        ax.xaxis.set_major_formatter(ScalarFormatter())
+        ax.yaxis.set_major_formatter(ScalarFormatter())
         ax.ticklabel_format(style="plain", axis="both")
 
-    # スケールが近ければ等軸比（図形の歪みを避ける）
+    # --- 等軸比（線形軸のみ） ---
     if equal_aspect_if_similar_scale and not use_log:
-        x_span = data[x_name].max() - data[x_name].min()
-        y_span = data[y_name].max() - data[y_name].min()
+        x_span = log_data[x_name].max() - log_data[x_name].min()
+        y_span = log_data[y_name].max() - log_data[y_name].min()
         if x_span > 0 and y_span > 0:
             ratio = max(x_span, y_span) / min(x_span, y_span)
-            if ratio < 2:  # だいたい同程度のスケールなら
-                ax.set_aspect("equal", adjustable="datalim")
+            if ratio < 2:
+                ax.set_aspect("equal", adjustable="box")
 
-    # 仕上げ
-    ax.grid(True)
+    # --- 仕上げ ---
+    ax.grid(True, linewidth=0.5, alpha=0.5)
     fig.tight_layout()
 
     if save_path:
-        fig.savefig(save_path)
+        fig.savefig(save_path, bbox_inches="tight", pad_inches=0.02)
+
     plt.show()
+    return fig, ax
